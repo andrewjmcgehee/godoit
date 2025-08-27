@@ -10,6 +10,28 @@ import (
 	"time"
 )
 
+const countActiveTodos = `-- name: CountActiveTodos :one
+SELECT COUNT(*) FROM todos WHERE completed = FALSE
+`
+
+func (q *Queries) CountActiveTodos(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countActiveTodos)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countCompletedTodos = `-- name: CountCompletedTodos :one
+SELECT COUNT(*) FROM todos WHERE completed = TRUE
+`
+
+func (q *Queries) CountCompletedTodos(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCompletedTodos)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createTodo = `-- name: CreateTodo :one
 INSERT INTO todos (content, priority, created_at, updated_at)
 VALUES (?, ?, ?, ?)

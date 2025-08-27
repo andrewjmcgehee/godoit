@@ -9,6 +9,8 @@ import (
 )
 
 type Querier interface {
+	CountActiveTodos(ctx context.Context) (int64, error)
+	CountCompletedTodos(ctx context.Context) (int64, error)
 	CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, error)
 	DeleteTodo(ctx context.Context, id int) error
 	GetActiveTodos(ctx context.Context) ([]Todo, error)

@@ -42,3 +42,9 @@ DELETE FROM todos WHERE id = ?;
 SELECT id, content, priority, completed, created_at, updated_at 
 FROM todos 
 WHERE id = ?;
+
+-- name: CountActiveTodos :one
+SELECT COUNT(*) FROM todos WHERE completed = FALSE;
+
+-- name: CountCompletedTodos :one
+SELECT COUNT(*) FROM todos WHERE completed = TRUE;

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -21,6 +22,41 @@ var (
 )
 
 var (
+	// Tab styling
+	activeTabBorder = lipgloss.Border{
+		Top:         "─",
+		Bottom:      " ",
+		Left:        "│",
+		Right:       "│",
+		TopLeft:     "╭",
+		TopRight:    "╮",
+		BottomLeft:  "┘",
+		BottomRight: "└",
+	}
+
+	tabBorder = lipgloss.Border{
+		Top:         "─",
+		Bottom:      "─",
+		Left:        "│",
+		Right:       "│",
+		TopLeft:     "╭",
+		TopRight:    "╮",
+		BottomLeft:  "┴",
+		BottomRight: "┴",
+	}
+
+	tab = lipgloss.NewStyle().
+		Border(tabBorder, true).
+		BorderForeground(magenta).
+		Padding(0, 1)
+
+	activeTab = tab.Border(activeTabBorder, true)
+
+	tabGap = tab.
+		BorderTop(false).
+		BorderLeft(false).
+		BorderRight(false)
+
 	titleStyle = lipgloss.NewStyle().
 			Foreground(blue).
 			Padding(0, 2).
@@ -155,16 +191,52 @@ func (s State) View() string {
 	return b.String()
 }
 
+func (s State) renderTabs() string {
+	activeTabText := fmt.Sprintf("📋 Active (%s)", func() string {
+		ctx := context.Background()
+		cnt, err := s.database.Queries.CountActiveTodos(ctx)
+		if err != nil {
+			return "?"
+		}
+		return fmt.Sprintf("%d", cnt)
+	}())
+
+	completedTabText := fmt.Sprintf("✅ Completed (%s)", func() string {
+		ctx := context.Background()
+		cnt, err := s.database.Queries.CountCompletedTodos(ctx)
+		if err != nil {
+			return "?"
+		}
+		return fmt.Sprintf("%d", cnt)
+	}())
+
+	var activeTabRendered, completedTabRendered string
+	if s.viewMode == ActiveView {
+		activeTabRendered = activeTab.Render(activeTabText)
+		completedTabRendered = tab.Render(completedTabText)
+	} else {
+		activeTabRendered = tab.Render(activeTabText)
+		completedTabRendered = activeTab.Render(completedTabText)
+	}
+
+	row := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		activeTabRendered,
+		completedTabRendered,
+	)
+
+	gap := tabGap.Render(strings.Repeat(" ", max(0, s.windowWidth-lipgloss.Width(row)-2)))
+	row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
+
+	return row
+}
+
 func (s State) renderBrowseView() string {
 	var b strings.Builder
-	viewIcon := "📋"
-	viewTitle := "Active Todos"
-	if s.viewMode == CompletedView {
-		viewIcon = "✅"
-		viewTitle = "Completed Todos"
-	}
-	header := headerStyle.Render(fmt.Sprintf("%s %s (%d)", viewIcon, viewTitle, len(s.todos)))
-	b.WriteString(header + "\n")
+
+	// Render tabs instead of header
+	tabs := s.renderTabs()
+	b.WriteString(tabs + "\n\n")
 	if len(s.todos) == 0 {
 		emptyMsg := "😌 Nothing here!"
 		if s.viewMode == ActiveView {
