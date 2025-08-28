@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/andrewjmcgehee/godo/internal/orm"
+	"github.com/andrewjmcgehee/godoit/internal/orm"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose/v3"
 )
@@ -27,12 +27,12 @@ func NewDatabase() (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	localShareGodo := filepath.Join(home, ".local", "share", "godo")
-	err = os.MkdirAll(localShareGodo, 0755)
+	localShareGodoit := filepath.Join(home, ".local", "share", "godoit")
+	err = os.MkdirAll(localShareGodoit, 0755)
 	if err != nil {
 		return nil, err
 	}
-	dbPath := filepath.Join(localShareGodo, "todos.db")
+	dbPath := filepath.Join(localShareGodoit, "todos.db")
 	sqlDB, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err

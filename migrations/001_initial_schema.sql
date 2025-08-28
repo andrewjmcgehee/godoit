@@ -1,5 +1,5 @@
 -- +goose Up
--- Database schema for godo todo application
+-- Database schema for godoit todo application
 CREATE TABLE IF NOT EXISTS todos (
     id INTEGER PRIMARY KEY,
     content TEXT NOT NULL,

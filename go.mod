@@ -1,4 +1,4 @@
-module github.com/andrewjmcgehee/godo
+module github.com/andrewjmcgehee/godoit
 
 go 1.25.0
 

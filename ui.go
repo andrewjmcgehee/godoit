@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andrewjmcgehee/godo/internal/orm"
+	"github.com/andrewjmcgehee/godoit/internal/orm"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

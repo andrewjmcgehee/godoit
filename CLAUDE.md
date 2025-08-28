@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is "godo", a terminal-based todo application written in Go using the Bubble Tea TUI framework. The application provides an interactive interface for managing todos with priorities, completion states, and persistence via SQLite with modern tooling.
+This is "godoit", a terminal-based todo application written in Go using the Bubble Tea TUI framework. The application provides an interactive interface for managing todos with priorities, completion states, and persistence via SQLite with modern tooling.
 
 ## Architecture
 
@@ -20,30 +20,35 @@ The application uses modern Go tooling and clean architecture:
 - **sql/**: SQLite schema and query definitions for sqlc
 
 Key architectural patterns:
+
 - **Goose** for database migrations with embedded migration files
 - **Sqlc** for type-safe SQL queries and automatic Go code generation
 - Bubble Tea's Elm-like architecture (Model-View-Update)
-- SQLite database stored in `~/.local/share/godo/todos.db`
+- SQLite database stored in `~/.local/share/godoit/todos.db`
 
 ## Commands
 
 **Build and run:**
+
 ```bash
-go build -o godo
-./godo
+go build -o godoit
+./godoit
 ```
 
 **Run directly:**
+
 ```bash
 go run .
 ```
 
 **Dependencies:**
+
 ```bash
 go mod tidy
 ```
 
 **Database operations:**
+
 ```bash
 # Generate sqlc code after modifying queries
 sqlc generate
@@ -52,12 +57,13 @@ sqlc generate
 goose -dir migrations create <migration_name> sql
 
 # Check migration status
-goose -dir migrations sqlite3 ~/.local/share/godo/todos.db status
+goose -dir migrations sqlite3 ~/.local/share/godoit/todos.db status
 ```
 
 ## Data Model
 
 The core Todo struct includes:
+
 - ID (int): Primary key
 - Content (string): Todo text  
 - Priority (Priority): P0 (high/red), P1 (medium/yellow), P2 (low/green)
@@ -76,17 +82,20 @@ Priority is a custom string type with constants P0, P1, P2.
 ## UI States
 
 The application has three main UI states:
+
 - **BrowsingState**: Default view for navigating todos
 - **EditingState**: Editing existing todo content  
 - **CreatingState**: Creating new todos
 
 View modes:
+
 - **ActiveView**: Shows incomplete todos
 - **CompletedView**: Shows completed todos
 
 ## Styling
 
 Enhanced visual design with:
+
 - Modern color palette (soft purple, mint green, coral red, etc.)
 - Priority badges with colored backgrounds and borders
 - Improved typography with emojis and better spacing
