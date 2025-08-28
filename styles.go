@@ -353,29 +353,105 @@ func (s State) renderBrowseView() string {
 }
 
 func (s State) renderCreateView() string {
-	var b strings.Builder
-	header := headerStyle.Render("create todo")
-	b.WriteString(header + "\n")
-	prompt := itemStyle.Render("content: ")
-	b.WriteString(prompt + "\n")
-	input := inputStyle.Render(s.editingText + "│")
-	b.WriteString(input + "\n")
-	help := helpStyle.Render("enter: save • esc: cancel")
-	b.WriteString(help)
-	return b.String()
+	// Create a centered box for the create form
+	formBoxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(magenta).
+		Padding(2, 4).
+		Width(60).
+		Align(lipgloss.Center)
+	titleStyle := lipgloss.NewStyle().
+		Foreground(magenta).
+		Bold(true).
+		MarginBottom(1).
+		Align(lipgloss.Center)
+	promptStyle := lipgloss.NewStyle().
+		Foreground(green).
+		Bold(true).
+		MarginBottom(1)
+	inputFieldStyle := lipgloss.NewStyle().
+		Foreground(gray).
+		Padding(0, 2).
+		Width(50).
+		Border(lipgloss.NormalBorder()).
+		BorderForeground(yellow)
+	helpTextStyle := lipgloss.NewStyle().
+		Foreground(lightGray).
+		Italic(true).
+		MarginTop(2).
+		Align(lipgloss.Center)
+	var content []string
+	content = append(content, titleStyle.Render("create new todo"))
+	content = append(content, promptStyle.Render("what do you need to do?"))
+	content = append(content, inputFieldStyle.Render(s.editingText+"█"))
+	content = append(content, helpTextStyle.Render("enter: save • esc: cancel"))
+	formContent := strings.Join(content, "\n")
+	form := formBoxStyle.Render(formContent)
+	if s.windowWidth > 0 && s.windowHeight > 0 {
+		availableHeight := s.windowHeight - len(asciiArt) - 4
+		form = lipgloss.Place(
+			s.windowWidth,
+			availableHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			form,
+		)
+	}
+	return form
 }
 
 func (s State) renderEditView() string {
-	var b strings.Builder
-	header := headerStyle.Render("edit todo")
-	b.WriteString(header + "\n")
-	prompt := itemStyle.Render("update content:")
-	b.WriteString(prompt + "\n")
-	input := inputStyle.Render(s.editingText + "│")
-	b.WriteString(input + "\n")
-	help := helpStyle.Render("enter: save • esc: cancel")
-	b.WriteString(help)
-	return b.String()
+	// Create a centered box for the edit form
+	formBoxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(magenta).
+		Padding(2, 4).
+		Width(60).
+		Align(lipgloss.Center)
+	titleStyle := lipgloss.NewStyle().
+		Foreground(magenta).
+		Bold(true).
+		MarginBottom(1).
+		Align(lipgloss.Center)
+	promptStyle := lipgloss.NewStyle().
+		Foreground(yellow).
+		Bold(true).
+		MarginBottom(1)
+	inputFieldStyle := lipgloss.NewStyle().
+		Foreground(gray).
+		Padding(0, 2).
+		Width(50).
+		Border(lipgloss.NormalBorder()).
+		BorderForeground(yellow)
+	helpTextStyle := lipgloss.NewStyle().
+		Foreground(lightGray).
+		Italic(true).
+		MarginTop(2).
+		Align(lipgloss.Center)
+	currentTextStyle := lipgloss.NewStyle().
+		Foreground(lightGray).
+		Italic(true)
+	var content []string
+	content = append(content, titleStyle.Render("edit todo"))
+	if s.editingTodo != nil {
+		content = append(content, currentTextStyle.Render("current: "+s.editingTodo.Content))
+	}
+	content = append(content, promptStyle.Render("update your todo:"))
+	content = append(content, inputFieldStyle.Render(s.editingText+"█"))
+	content = append(content, helpTextStyle.Render("enter: save • esc: cancel"))
+	formContent := strings.Join(content, "\n")
+	form := formBoxStyle.Render(formContent)
+	if s.windowWidth > 0 && s.windowHeight > 0 {
+		availableHeight := s.windowHeight - len(asciiArt) - 4
+		form = lipgloss.Place(
+			s.windowWidth,
+			availableHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			form,
+		)
+	}
+	return form
 }
 
 func (s State) renderPriority(priority Priority) string {
