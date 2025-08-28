@@ -77,47 +77,11 @@ const getActiveTodos = `-- name: GetActiveTodos :many
 SELECT id, content, priority, completed, created_at, updated_at 
 FROM todos 
 WHERE completed = FALSE 
-ORDER BY created_at DESC
+ORDER BY priority ASC, created_at DESC
 `
 
 func (q *Queries) GetActiveTodos(ctx context.Context) ([]Todo, error) {
 	rows, err := q.db.QueryContext(ctx, getActiveTodos)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Todo{}
-	for rows.Next() {
-		var i Todo
-		if err := rows.Scan(
-			&i.ID,
-			&i.Content,
-			&i.Priority,
-			&i.Completed,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAllTodos = `-- name: GetAllTodos :many
-SELECT id, content, priority, completed, created_at, updated_at 
-FROM todos 
-ORDER BY created_at DESC
-`
-
-func (q *Queries) GetAllTodos(ctx context.Context) ([]Todo, error) {
-	rows, err := q.db.QueryContext(ctx, getAllTodos)
 	if err != nil {
 		return nil, err
 	}
@@ -181,26 +145,6 @@ func (q *Queries) GetCompletedTodos(ctx context.Context) ([]Todo, error) {
 		return nil, err
 	}
 	return items, nil
-}
-
-const getTodoByID = `-- name: GetTodoByID :one
-SELECT id, content, priority, completed, created_at, updated_at 
-FROM todos 
-WHERE id = ?
-`
-
-func (q *Queries) GetTodoByID(ctx context.Context, id int) (Todo, error) {
-	row := q.db.QueryRowContext(ctx, getTodoByID, id)
-	var i Todo
-	err := row.Scan(
-		&i.ID,
-		&i.Content,
-		&i.Priority,
-		&i.Completed,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
 }
 
 const toggleTodoCompleted = `-- name: ToggleTodoCompleted :exec

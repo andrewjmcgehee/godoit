@@ -14,9 +14,7 @@ type Querier interface {
 	CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, error)
 	DeleteTodo(ctx context.Context, id int) error
 	GetActiveTodos(ctx context.Context) ([]Todo, error)
-	GetAllTodos(ctx context.Context) ([]Todo, error)
 	GetCompletedTodos(ctx context.Context) ([]Todo, error)
-	GetTodoByID(ctx context.Context, id int) (Todo, error)
 	ToggleTodoCompleted(ctx context.Context, arg ToggleTodoCompletedParams) error
 	UpdateTodoContent(ctx context.Context, arg UpdateTodoContentParams) error
 	UpdateTodoPriority(ctx context.Context, arg UpdateTodoPriorityParams) error
