@@ -170,20 +170,23 @@ func colorGrid(xSteps, ySteps int) [][]string {
 	x1y0, _ := colorful.Hex("#EDFF82")
 	x0y1, _ := colorful.Hex("#643AFF")
 	x1y1, _ := colorful.Hex("#14F9D5")
-	x0 := make([]colorful.Color, ySteps)
-	for i := range x0 {
-		x0[i] = x0y0.BlendLuv(x0y1, float64(i)/float64(ySteps))
-	}
-	x1 := make([]colorful.Color, ySteps)
-	for i := range x1 {
-		x1[i] = x1y0.BlendLuv(x1y1, float64(i)/float64(ySteps))
-	}
+
 	grid := make([][]string, ySteps)
-	for x := range ySteps {
-		y0 := x0[x]
-		grid[x] = make([]string, xSteps)
-		for y := range xSteps {
-			grid[x][y] = y0.BlendLuv(x1[x], float64(y)/float64(xSteps)).Hex()
+	for y := range ySteps {
+		grid[y] = make([]string, xSteps)
+		for x := range xSteps {
+			// Calculate normalized coordinates
+			xRatio := float64(x) / float64(xSteps-1)
+			yRatio := float64(y) / float64(ySteps-1)
+
+			// Blend horizontally for top and bottom rows
+			topColor := x0y0.BlendLuv(x1y0, xRatio)
+			bottomColor := x0y1.BlendLuv(x1y1, xRatio)
+
+			// Blend vertically between top and bottom colors
+			finalColor := topColor.BlendLuv(bottomColor, yRatio)
+
+			grid[y][x] = finalColor.Hex()
 		}
 	}
 	return grid
@@ -216,7 +219,7 @@ func (s State) renderTitle() string {
 	}
 	colorized = append(colorized, strings.Split(strings.Repeat(" ", s.windowWidth), ""))
 	subtitle := "seriously, just do the thing already..."
-	colors := colorGrid(len(colorized[0])+2, s.windowWidth)
+	colors := colorGrid(s.windowWidth, len(colorized))
 	for r := range colorized {
 		for c, char := range colorized[r] {
 			styledChar := lipgloss.NewStyle()
