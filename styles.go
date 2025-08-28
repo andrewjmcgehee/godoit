@@ -191,7 +191,7 @@ func (s State) View() string {
 }
 
 func (s State) renderTabs() string {
-	activeTabText := fmt.Sprintf("📋 Active (%s)", func() string {
+	activeTabText := fmt.Sprintf("active: %s", func() string {
 		ctx := context.Background()
 		cnt, err := s.database.Queries.CountActiveTodos(ctx)
 		if err != nil {
@@ -200,7 +200,7 @@ func (s State) renderTabs() string {
 		return fmt.Sprintf("%d", cnt)
 	}())
 
-	completedTabText := fmt.Sprintf("✅ Completed (%s)", func() string {
+	completedTabText := fmt.Sprintf("complete: %s", func() string {
 		ctx := context.Background()
 		cnt, err := s.database.Queries.CountCompletedTodos(ctx)
 		if err != nil {
@@ -236,9 +236,9 @@ func (s State) renderBrowseView() string {
 	tabs := s.renderTabs()
 	b.WriteString(tabs + "\n\n")
 	if len(s.todos) == 0 {
-		emptyMsg := "😌 Nothing here!"
+		emptyMsg := "😌 nothing here!"
 		if s.viewMode == ActiveView {
-			emptyMsg = "😌 No active todos! Press 'n' to create your first one."
+			emptyMsg = "😌 no active todos! press 'n' to create one."
 		}
 		b.WriteString(emptyStyle.Render(emptyMsg) + "\n")
 	} else {

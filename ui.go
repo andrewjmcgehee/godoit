@@ -128,21 +128,23 @@ func (s State) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (s State) handleBrowsingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "ctrl+c", "q":
+	case tea.KeyEsc.String(), "q":
 		return s, tea.Quit
-	case "up", "k":
+	case tea.KeyUp.String(), "k":
 		if s.cursor > 0 {
 			s.cursor--
 		}
-	case "down", "j":
+	case tea.KeyDown.String(), "j":
 		if s.cursor < len(s.todos)-1 {
 			s.cursor++
 		}
 	case "n":
-		s.uiState = CreatingState
-		s.editingText = ""
+		if s.viewMode == ActiveView {
+			s.uiState = CreatingState
+			s.editingText = ""
+		}
 	case "e":
-		if len(s.todos) > 0 && s.cursor < len(s.todos) {
+		if s.viewMode == ActiveView && len(s.todos) > 0 && s.cursor < len(s.todos) {
 			s.uiState = EditingState
 			s.editingTodo = &s.todos[s.cursor]
 			s.editingText = s.editingTodo.Content
@@ -156,13 +158,12 @@ func (s State) handleBrowsingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return s, s.deleteTodo(s.todos[s.cursor].ID)
 		}
 	case "p":
-		if len(s.todos) > 0 && s.cursor < len(s.todos) {
+		if s.viewMode == ActiveView && len(s.todos) > 0 && s.cursor < len(s.todos) {
 			return s, s.cyclePriority(s.todos[s.cursor].ID, Priority(s.todos[s.cursor].Priority))
 		}
 	case "?":
 		s.showHelp = !s.showHelp
 	case tea.KeyTab.String():
-		// Cycle between Active and Completed views
 		if s.viewMode == ActiveView {
 			s.viewMode = CompletedView
 		} else {
@@ -176,11 +177,11 @@ func (s State) handleBrowsingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (s State) handleEditingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "ctrl+c", "esc":
+	case tea.KeyEsc.String():
 		s.uiState = BrowsingState
 		s.editingTodo = nil
 		s.editingText = ""
-	case "enter":
+	case tea.KeyEnter.String():
 		if strings.TrimSpace(s.editingText) == "" {
 			return s, nil
 		}
@@ -189,7 +190,7 @@ func (s State) handleEditingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		} else if s.uiState == EditingState && s.editingTodo != nil {
 			return s, s.updateTodo(s.editingTodo.ID, s.editingText)
 		}
-	case "backspace":
+	case tea.KeyBackspace.String():
 		if len(s.editingText) > 0 {
 			s.editingText = s.editingText[:len(s.editingText)-1]
 		}
