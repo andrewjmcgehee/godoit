@@ -243,9 +243,9 @@ func (s State) renderBrowseView() string {
 		b.WriteString(emptyStyle.Render(emptyMsg) + "\n")
 	} else {
 		for i, todo := range s.todos {
-			cursor := cursorStyle.Render("   ")
+			cursor := cursorStyle.Render(" ")
 			if i == s.cursor {
-				cursor = cursorStyle.Render(">>>")
+				cursor = cursorStyle.Render("▶︎")
 			}
 			var content string
 			if i == s.cursor {
