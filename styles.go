@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/lucasb-eyer/go-colorful"
 )
 
 // Color palette inspired by modern terminal themes
@@ -56,13 +58,6 @@ var (
 		BorderTop(false).
 		BorderLeft(false).
 		BorderRight(false)
-
-	titleStyle = lipgloss.NewStyle().
-			Foreground(blue).
-			Padding(0, 2).
-			Bold(true).
-			Border(lipgloss.NormalBorder()).
-			Align(lipgloss.Center)
 
 	// Header styles with subtle borders
 	headerStyle = lipgloss.NewStyle().
@@ -170,12 +165,101 @@ var (
 			Bold(true)
 )
 
+func colorGrid(xSteps, ySteps int) [][]string {
+	x0y0, _ := colorful.Hex("#F25D94")
+	x1y0, _ := colorful.Hex("#EDFF82")
+	x0y1, _ := colorful.Hex("#643AFF")
+	x1y1, _ := colorful.Hex("#14F9D5")
+	x0 := make([]colorful.Color, ySteps)
+	for i := range x0 {
+		x0[i] = x0y0.BlendLuv(x0y1, float64(i)/float64(ySteps))
+	}
+	x1 := make([]colorful.Color, ySteps)
+	for i := range x1 {
+		x1[i] = x1y0.BlendLuv(x1y1, float64(i)/float64(ySteps))
+	}
+	grid := make([][]string, ySteps)
+	for x := range ySteps {
+		y0 := x0[x]
+		grid[x] = make([]string, xSteps)
+		for y := range xSteps {
+			grid[x][y] = y0.BlendLuv(x1[x], float64(y)/float64(xSteps)).Hex()
+		}
+	}
+	return grid
+}
+
+func (s State) renderTitle() string {
+	asciiArt := []string{
+		" ██████╗  ██████╗     ██████╗  ██████╗     ██╗████████╗",
+		"██╔════╝ ██╔═══██╗    ██╔══██╗██╔═══██╗    ██║╚══██╔══╝",
+		"██║  ███╗██║   ██║    ██║  ██║██║   ██║    ██║   ██║   ",
+		"██║   ██║██║   ██║    ██║  ██║██║   ██║    ██║   ██║   ",
+		"╚██████╔╝╚██████╔╝    ██████╔╝╚██████╔╝    ██║   ██║   ",
+		" ╚═════╝  ╚═════╝     ╚═════╝  ╚═════╝     ╚═╝   ╚═╝   ",
+	}
+	rows := len(asciiArt)
+	cols := utf8.RuneCountInString(asciiArt[0])
+	widthMinusTitle := s.windowWidth - cols
+	leftPad := widthMinusTitle / 2
+	rightPad := leftPad
+	if widthMinusTitle%2 != 0 {
+		rightPad += 1
+	}
+	colorized := [][]string{}
+	colorized = append(colorized, strings.Split(strings.Repeat(" ", s.windowWidth), ""))
+	for row := range rows {
+		line := strings.Repeat(" ", leftPad)
+		line += asciiArt[row]
+		line += strings.Repeat(" ", rightPad)
+		colorized = append(colorized, strings.Split(line, ""))
+	}
+	colorized = append(colorized, strings.Split(strings.Repeat(" ", s.windowWidth), ""))
+	subtitle := "seriously, just do the thing already..."
+	colors := colorGrid(len(colorized[0])+2, s.windowWidth)
+	for r := range colorized {
+		for c, char := range colorized[r] {
+			styledChar := lipgloss.NewStyle()
+			bgColor := lipgloss.Color(colors[r][c])
+			if char == " " {
+				styledChar = styledChar.Foreground(bgColor)
+			} else {
+				styledChar = styledChar.Foreground(lipgloss.Color("0"))
+			}
+			styledChar = styledChar.
+				Background(bgColor).
+				Bold(true)
+			colorized[r][c] = styledChar.Render(char)
+		}
+	}
+	lines := []string{}
+	for _, row := range colorized {
+		lines = append(lines, strings.Join(row, ""))
+	}
+	asciiTitle := strings.Join(lines, "\n")
+	styledSubtitle := lipgloss.NewStyle().
+		Foreground(magenta).
+		Bold(true).
+		Italic(true).
+		Align(lipgloss.Center).
+		Render(subtitle)
+	titleContent := lipgloss.JoinVertical(lipgloss.Center, asciiTitle, "", styledSubtitle)
+	titleBox := lipgloss.NewStyle().
+		Align(lipgloss.Center).
+		Render(titleContent)
+	if s.windowWidth > 0 {
+		titleBox = lipgloss.Place(s.windowWidth, lipgloss.Height(titleBox),
+			lipgloss.Center, lipgloss.Top, titleBox)
+	}
+	return titleBox
+}
+
 func (s State) View() string {
 	if s.windowHeight == 0 {
 		return "Loading..."
 	}
 	var b strings.Builder
-	title := titleStyle.Render("godo - go do what you're procrastinating doing")
+	title := s.renderTitle()
 	b.WriteString(title + "\n")
 	switch s.uiState {
 	case CreatingState:
