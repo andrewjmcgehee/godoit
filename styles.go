@@ -27,7 +27,6 @@ var (
 	gray      = lipgloss.Color("15")
 	lightGray = lipgloss.Color("15")
 	blue      = lipgloss.Color("9")
-	white     = lipgloss.Color("0")
 )
 
 var (
@@ -60,68 +59,28 @@ var (
 			BorderTop(false).
 			BorderLeft(false).
 			BorderRight(false)
-	headerStyle = lipgloss.NewStyle().
-			Foreground(gray).
-			Bold(true).
-			MarginTop(1).
-			MarginBottom(1).
-			PaddingLeft(1).
-			Border(lipgloss.Border{
-			Left: "▎",
-		}).
-		BorderForeground(magenta)
 	selectedItemStyle = lipgloss.NewStyle().
 				Foreground(gray).
-				Padding(0, 2).
-				MarginRight(1).
-				Bold(true)
+				MarginRight(1)
 	itemStyle = lipgloss.NewStyle().
-			Padding(0, 2).
 			Foreground(gray).
 			MarginRight(1)
 	completedItemStyle = lipgloss.NewStyle().
-				Padding(0, 2).
-				Foreground(lightGray).
+				Foreground(gray).
 				Strikethrough(true).
 				MarginRight(1)
 	selectedCompletedItemStyle = lipgloss.NewStyle().
 					Foreground(gray).
-					Background(lightGray).
-					Padding(0, 2).
 					MarginRight(1).
-					Strikethrough(true).
-					Bold(true)
+					Strikethrough(true)
 	priorityP0Style = lipgloss.NewStyle().
-			Foreground(red).
-			Bold(true).
-			Padding(0, 1)
+			Foreground(red)
 	priorityP1Style = lipgloss.NewStyle().
-			Foreground(yellow).
-			Bold(true).
-			Padding(0, 1)
+			Foreground(yellow)
 	priorityP2Style = lipgloss.NewStyle().
-			Foreground(green).
-			Bold(true).
-			Padding(0, 1)
-	helpStyle = lipgloss.NewStyle().
-			Foreground(lightGray).
-			MarginTop(2).
-			PaddingTop(1).
-			Border(lipgloss.Border{
-			Top: "─",
-		}).
-		BorderForeground(white).
-		Italic(true)
-	inputStyle = lipgloss.NewStyle().
-			Foreground(gray).
-			Background(blue).
-			Padding(0, 2).
-			MarginTop(1).
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(magenta)
+			Foreground(green)
 	messageStyle = lipgloss.NewStyle().
 			Foreground(red).
-			Bold(true).
 			MarginTop(1).
 			Padding(0, 1).
 			Background(lipgloss.Color("#2D1B1B"))
@@ -132,7 +91,7 @@ var (
 			Align(lipgloss.Center)
 	cursorStyle = lipgloss.NewStyle().
 			Foreground(magenta).
-			Bold(true)
+			Padding(0, 1)
 )
 
 func colorGrid(xSteps, ySteps int) [][]string {
@@ -185,8 +144,7 @@ func (s State) renderTitle() string {
 				styledChar = styledChar.Foreground(lipgloss.Color("0"))
 			}
 			styledChar = styledChar.
-				Background(bgColor).
-				Bold(true)
+				Background(bgColor)
 			colorized[r][c] = styledChar.Render(char)
 		}
 	}
@@ -197,7 +155,6 @@ func (s State) renderTitle() string {
 	asciiTitle := strings.Join(lines, "\n")
 	styledSubtitle := lipgloss.NewStyle().
 		Foreground(magenta).
-		Bold(true).
 		Italic(true).
 		Align(lipgloss.Center).
 		Render(subtitle)
@@ -276,7 +233,6 @@ func (s State) renderTabs() string {
 func (s State) renderBrowseView() string {
 	var b strings.Builder
 
-	// Render tabs instead of header
 	tabs := s.renderTabs()
 	b.WriteString(tabs + "\n\n")
 	if len(s.todos) == 0 {
@@ -287,54 +243,41 @@ func (s State) renderBrowseView() string {
 		b.WriteString(emptyStyle.Render(emptyMsg) + "\n")
 	} else {
 		for i, todo := range s.todos {
-			cursor := "  "
+			cursor := cursorStyle.Render("   ")
 			if i == s.cursor {
-				cursor = cursorStyle.Render("> ")
-			} else {
-				cursor = "  "
+				cursor = cursorStyle.Render(">>>")
 			}
-			priorityText := s.renderPriority(Priority(todo.Priority))
-			content := fmt.Sprintf("%s%s: %s", cursor, priorityText, todo.Content)
-
+			var content string
 			if i == s.cursor {
 				if todo.Completed {
+					content = fmt.Sprintf("%s: %s", todo.Priority, todo.Content)
 					content = selectedCompletedItemStyle.Render(content)
 				} else {
+					priorityText := s.renderPriority(Priority(todo.Priority))
+					content = fmt.Sprintf("%s: %s", priorityText, todo.Content)
 					content = selectedItemStyle.Render(content)
 				}
 			} else {
 				if todo.Completed {
+					content = fmt.Sprintf("%s: %s", todo.Priority, todo.Content)
 					content = completedItemStyle.Render(content)
 				} else {
+					priorityText := s.renderPriority(Priority(todo.Priority))
+					content = fmt.Sprintf("%s: %s", priorityText, todo.Content)
 					content = itemStyle.Render(content)
 				}
 			}
-
-			b.WriteString(content + "\n")
+			b.WriteString(fmt.Sprintf("%s %s\n", cursor, content))
 		}
 	}
-
-	// Get the main content
 	mainContent := b.String()
-
-	// Render help overlay
 	help := s.renderHelp()
-
-	// Combine main content with help overlay
-	// The help is already positioned by lipgloss.Place in renderHelp()
 	lines := strings.Split(mainContent, "\n")
 	helpLines := strings.Split(help, "\n")
-
-	// Merge the help overlay onto the main content
-	maxLines := len(lines)
-	if len(helpLines) > maxLines {
-		maxLines = len(helpLines)
-	}
-
+	maxLines := max(len(lines), len(helpLines))
 	result := make([]string, maxLines)
-	for i := 0; i < maxLines; i++ {
+	for i := range maxLines {
 		if i < len(lines) && i < len(helpLines) {
-			// Overlay help line on main content line
 			mainLine := lines[i]
 			helpLine := helpLines[i]
 			if strings.TrimSpace(helpLine) != "" {
@@ -348,43 +291,47 @@ func (s State) renderBrowseView() string {
 			result[i] = helpLines[i]
 		}
 	}
-
 	return strings.Join(result, "\n")
 }
 
 func (s State) renderCreateView() string {
-	// Create a centered box for the create form
 	formBoxStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(magenta).
-		Padding(2, 4).
+		Padding(1, 2).
 		Width(60).
 		Align(lipgloss.Center)
 	titleStyle := lipgloss.NewStyle().
 		Foreground(magenta).
-		Bold(true).
 		MarginBottom(1).
 		Align(lipgloss.Center)
-	promptStyle := lipgloss.NewStyle().
-		Foreground(green).
-		Bold(true).
-		MarginBottom(1)
 	inputFieldStyle := lipgloss.NewStyle().
 		Foreground(gray).
 		Padding(0, 2).
 		Width(50).
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(yellow)
-	helpTextStyle := lipgloss.NewStyle().
-		Foreground(lightGray).
-		Italic(true).
-		MarginTop(2).
-		Align(lipgloss.Center)
+	keymapBoxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(magenta).
+		Padding(0, 2).
+		MarginRight(1)
+	keyStyle := lipgloss.NewStyle().
+		Foreground(yellow).
+		Width(10)
+	descStyle := lipgloss.NewStyle().
+		Foreground(lightGray)
+
 	var content []string
 	content = append(content, titleStyle.Render("create new todo"))
-	content = append(content, promptStyle.Render("what do you need to do?"))
 	content = append(content, inputFieldStyle.Render(s.editingText+"█"))
-	content = append(content, helpTextStyle.Render("enter: save • esc: cancel"))
+
+	var keymaps []string
+	keymaps = append(keymaps, lipgloss.JoinHorizontal(lipgloss.Left, keyStyle.Render("enter"), descStyle.Render("save todo")))
+	keymaps = append(keymaps, lipgloss.JoinHorizontal(lipgloss.Left, keyStyle.Render("esc"), descStyle.Render("cancel")))
+	keymapContent := strings.Join(keymaps, "\n")
+
+	content = append(content, keymapBoxStyle.Render(keymapContent))
 	formContent := strings.Join(content, "\n")
 	form := formBoxStyle.Render(formContent)
 	if s.windowWidth > 0 && s.windowHeight > 0 {
@@ -401,44 +348,43 @@ func (s State) renderCreateView() string {
 }
 
 func (s State) renderEditView() string {
-	// Create a centered box for the edit form
 	formBoxStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(magenta).
-		Padding(2, 4).
+		Padding(1, 2).
 		Width(60).
 		Align(lipgloss.Center)
 	titleStyle := lipgloss.NewStyle().
 		Foreground(magenta).
-		Bold(true).
 		MarginBottom(1).
 		Align(lipgloss.Center)
-	promptStyle := lipgloss.NewStyle().
-		Foreground(yellow).
-		Bold(true).
-		MarginBottom(1)
 	inputFieldStyle := lipgloss.NewStyle().
 		Foreground(gray).
 		Padding(0, 2).
 		Width(50).
 		Border(lipgloss.NormalBorder()).
 		BorderForeground(yellow)
-	helpTextStyle := lipgloss.NewStyle().
-		Foreground(lightGray).
-		Italic(true).
-		MarginTop(2).
-		Align(lipgloss.Center)
-	currentTextStyle := lipgloss.NewStyle().
-		Foreground(lightGray).
-		Italic(true)
+	keymapBoxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(magenta).
+		Padding(0, 2).
+		MarginRight(1)
+	keyStyle := lipgloss.NewStyle().
+		Foreground(yellow).
+		Width(10)
+	descStyle := lipgloss.NewStyle().
+		Foreground(lightGray)
+
 	var content []string
 	content = append(content, titleStyle.Render("edit todo"))
-	if s.editingTodo != nil {
-		content = append(content, currentTextStyle.Render("current: "+s.editingTodo.Content))
-	}
-	content = append(content, promptStyle.Render("update your todo:"))
 	content = append(content, inputFieldStyle.Render(s.editingText+"█"))
-	content = append(content, helpTextStyle.Render("enter: save • esc: cancel"))
+
+	var keymaps []string
+	keymaps = append(keymaps, lipgloss.JoinHorizontal(lipgloss.Left, keyStyle.Render("enter"), descStyle.Render("save changes")))
+	keymaps = append(keymaps, lipgloss.JoinHorizontal(lipgloss.Left, keyStyle.Render("esc"), descStyle.Render("cancel")))
+	keymapContent := strings.Join(keymaps, "\n")
+
+	content = append(content, keymapBoxStyle.Render(keymapContent))
 	formContent := strings.Join(content, "\n")
 	form := formBoxStyle.Render(formContent)
 	if s.windowWidth > 0 && s.windowHeight > 0 {
@@ -479,7 +425,6 @@ func (s State) renderHelp() string {
 			MarginRight(1)
 		titleStyle := lipgloss.NewStyle().
 			Foreground(magenta).
-			Bold(true).
 			Align(lipgloss.Center)
 		keymaps = keymapBoxStyle.Render(titleStyle.Render("? keymaps"))
 	}
@@ -494,7 +439,6 @@ func (s State) renderHelp() string {
 }
 
 func (s State) renderKeymaps() string {
-	// Create a pretty keymap display
 	keymapBoxStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(magenta).
@@ -502,12 +446,10 @@ func (s State) renderKeymaps() string {
 		MarginRight(1)
 	titleStyle := lipgloss.NewStyle().
 		Foreground(magenta).
-		Bold(true).
 		MarginBottom(1).
 		Align(lipgloss.Center)
 	keyStyle := lipgloss.NewStyle().
 		Foreground(yellow).
-		Bold(true).
 		Width(15)
 	descStyle := lipgloss.NewStyle().
 		Foreground(gray)
