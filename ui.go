@@ -36,6 +36,7 @@ type State struct {
 	message      string
 	windowWidth  int
 	windowHeight int
+	showHelp     bool
 }
 
 type todoLoadedMsg struct {
@@ -158,6 +159,8 @@ func (s State) handleBrowsingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if len(s.todos) > 0 && s.cursor < len(s.todos) {
 			return s, s.cyclePriority(s.todos[s.cursor].ID, Priority(s.todos[s.cursor].Priority))
 		}
+	case "?":
+		s.showHelp = !s.showHelp
 	case tea.KeyTab.String():
 		// Cycle between Active and Completed views
 		if s.viewMode == ActiveView {
