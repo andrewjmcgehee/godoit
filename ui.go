@@ -140,7 +140,7 @@ func (s State) handleBrowsingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "n":
 		s.uiState = CreatingState
 		s.editingText = ""
-	case "c":
+	case "e":
 		if len(s.todos) > 0 && s.cursor < len(s.todos) {
 			s.uiState = EditingState
 			s.editingTodo = &s.todos[s.cursor]
@@ -158,18 +158,15 @@ func (s State) handleBrowsingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if len(s.todos) > 0 && s.cursor < len(s.todos) {
 			return s, s.cyclePriority(s.todos[s.cursor].ID, Priority(s.todos[s.cursor].Priority))
 		}
-	case "a":
-		if s.viewMode != ActiveView {
-			s.viewMode = ActiveView
-			s.cursor = 0
-			return s, s.loadTodos()
-		}
-	case "l":
-		if s.viewMode != CompletedView {
+	case tea.KeyTab.String():
+		// Cycle between Active and Completed views
+		if s.viewMode == ActiveView {
 			s.viewMode = CompletedView
-			s.cursor = 0
-			return s, s.loadTodos()
+		} else {
+			s.viewMode = ActiveView
 		}
+		s.cursor = 0
+		return s, s.loadTodos()
 	}
 	return s, nil
 }

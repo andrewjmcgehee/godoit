@@ -415,20 +415,18 @@ func (s State) renderPriority(priority Priority) string {
 
 func (s State) renderHelp() string {
 	var helps []string
-
 	switch s.viewMode {
 	case ActiveView:
 		helps = []string{
-			"↑/k up", "↓/j down", "space toggle", "c edit", "n new",
-			"d delete", "p priority", "l completed", "q quit",
+			"↑/k: up", "↓/j: down", "space: mark complete", "n: new", "e: edit",
+			"d: delete", "p: cycle priority", "tab: next tab", "q: quit",
 		}
 	case CompletedView:
 		helps = []string{
-			"↑/k up", "↓/j down", "space toggle", "d delete",
-			"a active", "q quit",
+			"↑/k: up", "↓/j: down", "space: mark incomplete", "d: delete",
+			"tab: next tab", "q: quit",
 		}
 	}
-
 	helpText := strings.Join(helps, " • ")
 	return helpStyle.Render("💡 " + helpText)
 }
